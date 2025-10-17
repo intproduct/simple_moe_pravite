@@ -5,7 +5,7 @@ import mlx.nn as nn
 from typing import List, Type, Any, Optional, Union
 from .losses import cross_entropy, mse_loss, balance_loss, accuracy
 
-def train_step_classification(model: Type[nn.Module], optimizer: Type[nn.Module], x: mx.array, y: mx.array, aux_weight: float = 1.0) -> Union[mx.array, float, mx.array]:
+def train_step_classification(model: nn.Module, optimizer: nn.Module, x: mx.array, y: mx.array, aux_weight: float = 1.0) -> Union[mx.array, float, mx.array]:
     def loss_aux():
         logits, aux = model(x, return_balance=True)
         ce_loss = cross_entropy(logits, y) + aux_weight * aux
@@ -19,7 +19,7 @@ def train_step_classification(model: Type[nn.Module], optimizer: Type[nn.Module]
     acc = accuracy(logits, y)
     return ce_loss.item(), acc, aux.item()
 
-def train_step_regression(model: Type[nn.Module], optimizer: Type[nn.Module], x: mx.array, y: mx.array, aux_weight: float = 1.0) -> Union[mx.array, float, mx.array]:
+def train_step_regression(model: nn.Module, optimizer: nn.Module, x: mx.array, y: mx.array, aux_weight: float = 1.0) -> Union[mx.array, float, mx.array]:
     def loss_aux():
         preds, aux = model(x, return_balance=True)
         mse = mse_loss(preds, y) + aux_weight * aux
