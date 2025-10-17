@@ -1,6 +1,6 @@
 import mlx.core as mx
 import numpy as np
-from SimpleMoEs.losses import cross_entropy, accuracy
+from .losses import cross_entropy, accuracy
 
 def smooth(xs, k=10):
     """滑动平均；兼容 Python list / np.ndarray；长度不足直接返回"""
