@@ -24,12 +24,14 @@ def log_softmax(x:mx.array, temperature:float, axis=-1)->mx.array:
 def topk_routing(probs:mx.array, k:int)->Union[mx.array, mx.array]:
     probs = probs.astype(mx.float32)
     idx_sorted = mx.argsort(probs, axis=-1)  #Sort index for each element in a row, the biggest element's index at the last
-    topk_idx = idx_sorted[:, -k:]     #get the index of the top k elements(the last k elements in the sorted index)                        
+    topk_idx = idx_sorted[:, -k:]     #get the index of the top k elements(the last k elements in the sorted index)
+    topk_idx = mx.stop_gradient(topk_idx)
 
     B, N = probs.shape
     mask = mx.zeros((B, N), dtype=probs.dtype)
     rows = mx.arange(B).reshape(-1, 1)
     mask[rows, topk_idx] = 1.0
+    mask = mx.stop_gradient(mask)
 
     masked = probs * mask    #Select the top k elements at their positions, other positions are 0
     norm = masked / (mx.sum(masked, axis=-1, keepdims=True) + 1e-9)
