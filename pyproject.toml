@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "simple-moes"           # pip 安装名（小写、用-隔开）
+version = "0.1.0"
+description = "A tiny Mixture-of-Experts (MoE) library on MLX."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { file = "LICENSE" }
+authors = [
+  { name = "Your Name", email = "you@example.com" }
+]
+keywords = ["moe", "mixture-of-experts", "mlx", "gating", "deep-learning"]
+
+dependencies = [
+  # 按你实际用到的库来填
+  "numpy>=1.23",
+  # "mlx" 目前可按你环境需要写，或让用户自装
+  # "torch" 如果你没有用就别写
+]
+
+[project.urls]
+Homepage = "https://github.com/<yourname>/SimpleMoEs"
+Issues = "https://github.com/<yourname>/SimpleMoEs/issues"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["simple_moes*"]
+exclude = ["examples*", "tests*"]
