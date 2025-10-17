@@ -25,6 +25,7 @@ class MoElayer(nn.Module):
 
     def __call__(self, x: mx.array, return_balance: bool = False) -> mx.array:
         probs, mask = self.gate(x)
+        mask = mx.stop_gradient(mask)
         if return_balance:
             ba = balance_loss(probs, mask, self.coeff)
         probs = probs[..., None]
