@@ -3,7 +3,7 @@
 import mlx.core as mx
 import mlx.nn as nn
 from typing import List, Type, Any, Optional, Union
-from SimpleMoEs.losses import cross_entropy, mse_loss, balance_loss, accuracy
+from .losses import cross_entropy, mse_loss, balance_loss, accuracy
 
 def train_step_classification(model: Type[nn.Module], optimizer: Type[nn.Module], x: mx.array, y: mx.array, aux_weight: float = 1.0) -> Union[mx.array, float, mx.array]:
     def loss_aux():
