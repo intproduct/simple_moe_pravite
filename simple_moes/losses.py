@@ -2,7 +2,7 @@
 
 import mlx.core as mx
 import mlx.nn as nn
-from SimpleMoEs.gate import log_softmax
+from .gate import log_softmax
 from typing import List, Type, Any, Optional
 
 def cross_entropy(logits: mx.array, targets: mx.array) -> mx.array:
