@@ -7,6 +7,7 @@ from typing import List, Type, Any, Optional
 
 class MLPExpert(nn.Module):
     def __init__(self, input_dim: int, hidden_dim: int, output_dim: int, num_layers: int=2, activation:Type[nn.Module]=nn.ReLU):
+        super().__init__()
         layer_size = [input_dim] + [hidden_dim] * (num_layers) + [output_dim]
         self.layers = [
             nn.Linear(in_dim, out_dim) for in_dim, out_dim in zip(layer_size[:-1], layer_size[1:])
