@@ -3,9 +3,9 @@
 import mlx.core as mx
 import mlx.nn as nn
 from typing import List, Type, Any, Optional
-from SimpleMoEs.losses import balance_loss
-from SimpleMoEs.gate import gate_factory
-from SimpleMoEs.heads import ClassificationHead, RegressionHead
+from .losses import balance_loss
+from .gate import gate_factory
+from .heads import ClassificationHead, RegressionHead
 
 
 class MoElayer(nn.Module):
