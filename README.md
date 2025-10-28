@@ -20,7 +20,7 @@
 
 ### 1️⃣ Clone or install from GitHub
 ```bash
-git clone https://github.com/<yourname>/SimpleMoEs.git
+git clone https://github.com/intproduct/SimpleMoEs.git
 cd SimpleMoEs
 pip install -e .
 ```
