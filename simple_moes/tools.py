@@ -1,52 +1,35 @@
+# Training process for Mixture of Experts (MoE) models
+
 import mlx.core as mx
-import numpy as np
-from .losses import cross_entropy, accuracy
+import mlx.nn as nn
+from typing import List, Type, Any, Optional, Union
+from .losses import cross_entropy, mse_loss, balance_loss, accuracy
 
-def smooth(xs, k=10):
-    """滑动平均；兼容 Python list / np.ndarray；长度不足直接返回"""
-    xs = np.asarray(xs).reshape(-1)  # 确保是一维序列；标量会变成长度 1
-    n  = xs.shape[0]
-    if n < k or k <= 1:
-        return xs.tolist()
-    c = np.cumsum(np.concatenate([[0.0], xs]))
-    sm = (c[k:] - c[:-k]) / k
-    return sm.tolist()
+def train_step_classification(model: nn.Module, optimizer: nn.Module, x: mx.array, y: mx.array, aux_weight: float = 1.0) -> Union[mx.array, float, mx.array]:
+    def loss_aux():
+        logits, aux = model(x, return_balance=True)
+        ce_loss = cross_entropy(logits, y) + aux_weight * aux
+        return ce_loss, (logits, aux)
+    
+    (ce_loss, (logits, aux)), grads = nn.value_and_grad(model, loss_aux)()
 
-def set_seed(seed: int=42):
-    np.random.seed(seed)
-    mx.random.seed(seed)
+    optimizer.update(model, grads)
+    mx.eval(model.parameters(), optimizer.state)
 
-def batch_iter(x, y, batch_size=256, shuffle=True):
-    n_samples = x.shape[0]
-    idx = np.arange(n_samples)
-    if shuffle:
-        np.random.shuffle(idx)
-    for s_idx in range(0, n_samples, batch_size):
-        batch_idx = mx.array(idx[s_idx:s_idx+batch_size])
-        yield x[batch_idx], y[batch_idx]
+    acc = accuracy(logits, y)
+    return ce_loss.item(), acc, aux.item()
 
-def evaluate(model, x, y, batch_size=256):
-    model.train(False)
-    total_loss, total_acc, n_samples = 0.0, 0.0, 0
-    for xb, yb in batch_iter(x, y, batch_size, shuffle=False):
-        logits = model(xb)
-        loss = cross_entropy(logits, yb)
-        acc = accuracy(logits, yb)
+def train_step_regression(model: nn.Module, optimizer: nn.Module, x: mx.array, y: mx.array, aux_weight: float = 1.0) -> Union[mx.array, float, mx.array]:
+    def loss_aux():
+        preds, aux = model(x, return_balance=True)
+        mse = mse_loss(preds, y) + aux_weight * aux
+        return mse, (preds, aux)
+    
+    (mse, (preds, aux)), grads = nn.value_and_grad(model, loss_aux)()
 
-        total_loss += loss.item()
-        total_acc += acc
-        n_samples += 1
-    return total_loss / max(n_samples,1), total_acc / max(n_samples,1)
+    optimizer.update(model, grads)
+    mx.eval(model.parameters(), optimizer.state)
 
-def evaluate_moe(model, x, y, batch_size=512):
-    model.train(False)
-    total_loss, total_acc, n_samples = 0.0, 0.0, 0
-    for xb, yb in batch_iter(x, y, batch_size, shuffle=False):
-        logits = model(xb, return_balance=False)
-        loss = cross_entropy(logits, yb)
-        acc = accuracy(logits, yb)
-
-        total_loss += loss.item()
-        total_acc += acc
-        n_samples += 1
-    return total_loss / max(n_samples,1), total_acc / max(n_samples,1)
+    rmse = float(mx.sqrt(mse))
+    return mse.item(), rmse, aux.item()
+        
