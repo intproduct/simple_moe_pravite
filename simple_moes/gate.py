@@ -19,19 +19,19 @@ def log_softmax(x:mx.array, temperature:float, axis=-1)->mx.array:
     x_max = mx.max(x, axis=axis, keepdims=True) 
     x_exp = mx.exp(x - x_max)
     x_exp_sum = mx.sum(x_exp, axis=axis, keepdims=True)
-    return (mx.log(x_exp) - mx.log(x_exp_sum)).astype(x_type)
+    return (x - x_max - mx.log(x_exp_sum))
 
 def topk_routing(probs:mx.array, k:int)->Union[mx.array, mx.array]:
     probs = probs.astype(mx.float32)
     idx_sorted = mx.argsort(probs, axis=-1)  #Sort index for each element in a row, the biggest element's index at the last
     topk_idx = idx_sorted[:, -k:]     #get the index of the top k elements(the last k elements in the sorted index)
-    topk_idx = mx.stop_gradient(topk_idx)
+    topk_idx = mx.stop_gradient(topk_idx)  #stop the gradient of mask term for proving the VJP Error.                        
 
     B, N = probs.shape
     mask = mx.zeros((B, N), dtype=probs.dtype)
     rows = mx.arange(B).reshape(-1, 1)
     mask[rows, topk_idx] = 1.0
-    mask = mx.stop_gradient(mask)
+    mask = mx.stop_gradient(mask)  #Like the above.
 
     masked = probs * mask    #Select the top k elements at their positions, other positions are 0
     norm = masked / (mx.sum(masked, axis=-1, keepdims=True) + 1e-9)
