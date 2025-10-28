@@ -25,7 +25,7 @@ class MoElayer(nn.Module):
 
     def __call__(self, x: mx.array, return_balance: bool = False) -> mx.array:
         probs, mask = self.gate(x)
-        mask = mx.stop_gradient(mask)
+        #mask = mx.stop_gradient(mask)
         if return_balance:
             ba = balance_loss(probs, mask, self.coeff)
         probs = probs[..., None]
@@ -43,14 +43,15 @@ class GenericMoE(nn.Module):
     def __init__(self, dim_input: int, dim_model: int, dim_output: int, num_experts: int,
                  dim_hidden: int, entropy_coeff: float,
                  experts: List[Type[nn.Module]], gate_name: str,
-                 expert_args: Optional[List[dict]] = None):
+                 expert_args: Optional[List[dict]] = None,
+                 **gate_kwargs):
         super().__init__()
         self.input_layer = nn.Sequential(
             nn.ReLU(),
             nn.Linear(dim_input, dim_model)
         )
 
-        self.gate = gate_factory(gate_name, dim_model, num_experts) #标准情况下调用top2/softmax 温度为1.0
+        self.gate = gate_factory(gate_name, dim_model, num_experts, **gate_kwargs) #标准情况下调用top2/softmax 温度为1.0
 
         self.moelayer = MoElayer(
             dim_input=dim_model,
