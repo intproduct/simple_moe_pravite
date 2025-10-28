@@ -60,7 +60,7 @@ from simple_moes import GenericMoE, ClassificationHead
 
 从 GitHub 克隆并安装
 ```bash
-git clone 链接2
+git clone https://github.com/intproduct/simple_moe_pravite.git
 cd simple_moe_pravite
 pip install -e
 ```
