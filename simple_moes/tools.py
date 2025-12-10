@@ -1,6 +1,7 @@
 import mlx.core as mx
 import numpy as np
 from .losses import cross_entropy, accuracy
+from typing import Optional
 
 def smooth(xs, k=10):
     """滑动平均；兼容 Python list / np.ndarray；长度不足直接返回"""
@@ -50,3 +51,55 @@ def evaluate_moe(model, x, y, batch_size=512):
         total_acc += acc
         n_samples += 1
     return total_loss / max(n_samples,1), total_acc / max(n_samples,1)
+
+
+class MoEInspector:
+    """
+    记录每个 expert 在训练过程中的使用情况：
+      - usage_counts: 被选中的 token 数 / 步数
+      - prob_sums: gate 概率总和
+    """
+
+    def __init__(self, num_experts: int):
+        self.num_experts = num_experts
+        self.usage_counts = mx.zeros((num_experts,), dtype=mx.float32)
+        self.prob_sums = mx.zeros((num_experts,), dtype=mx.float32)
+        self.steps = 0
+
+    def update(self, probs: mx.array, mask: Optional[mx.array] = None):
+        """
+        probs: (B, E) gate 概率
+        mask:  (B, E) 0/1 掩码（top-k 时可以用来统计真正激活的 expert）
+        """
+        probs = probs.astype(mx.float32)
+        B, E = probs.shape
+
+        # gate 概率求和
+        prob_sum = mx.sum(probs, axis=0)  # (E,)
+        self.prob_sums = self.prob_sums + prob_sum
+
+        # 如果有 mask，就按 mask 统计使用次数；否则按 argmax 统计
+        if mask is not None:
+            mask = mask.astype(mx.float32)
+            used = mx.sum(mask, axis=0)   # (E,)
+        else:
+            argmax_idx = mx.argmax(probs, axis=-1)  # (B,)
+            used = mx.zeros((E,), dtype=mx.float32)
+            for i in range(B):
+                used[argmax_idx[i]] = used[argmax_idx[i]] + 1.0
+
+        self.usage_counts = self.usage_counts + used
+        self.steps += 1
+
+    def summary(self):
+        if self.steps == 0:
+            return None
+
+        usage = self.usage_counts / mx.sum(self.usage_counts)
+        avg_prob = self.prob_sums / mx.sum(self.prob_sums)
+
+        return {
+            "usage_counts": self.usage_counts,
+            "usage_ratio": usage,      # 每个 expert 被用的比例
+            "avg_prob_ratio": avg_prob # gate 概率占比
+        }
