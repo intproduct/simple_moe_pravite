@@ -58,12 +58,14 @@ from .tools import (
     batch_iter,
     evaluate,
     evaluate_moe,
+    MoEInspector,
 )
 
 # Train steps
 from .trains import (
     train_step_classification,
     train_step_regression,
+    Trainer
 )
 
 __all__ = [
@@ -79,7 +81,7 @@ __all__ = [
     # moes
     "MoElayer", "GenericMoE",
     # tools
-    "smooth", "set_seed", "batch_iter", "evaluate", "evaluate_moe",
+    "smooth", "set_seed", "batch_iter", "evaluate", "evaluate_moe", "MoEInspector"
     # train steps
-    "train_step_classification", "train_step_regression",
+    "train_step_classification", "train_step_regression", "Trainer"
 ]
