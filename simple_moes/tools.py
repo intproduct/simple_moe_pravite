@@ -1,6 +1,6 @@
 import mlx.core as mx
 import numpy as np
-from .losses import cross_entropy, accuracy
+from .losses import cross_entropy, accuracy, mse_loss
 from typing import Optional
 
 def smooth(xs, k=10):
@@ -39,7 +39,7 @@ def evaluate(model, x, y, batch_size=256):
         n_samples += 1
     return total_loss / max(n_samples,1), total_acc / max(n_samples,1)
 
-def evaluate_moe(model, x, y, batch_size=512):
+def evaluate_classification(model, x, y, batch_size=512):
     model.train(False)
     total_loss, total_acc, n_samples = 0.0, 0.0, 0
     for xb, yb in batch_iter(x, y, batch_size, shuffle=False):
@@ -51,6 +51,32 @@ def evaluate_moe(model, x, y, batch_size=512):
         total_acc += acc
         n_samples += 1
     return total_loss / max(n_samples,1), total_acc / max(n_samples,1)
+
+def evaluate_regression(model, x, y, batch_size=512):
+    model.train(False)
+    total_mse, total_rmse, n_batches = 0.0, 0.0, 0
+    for xb, yb in batch_iter(x, y, batch_size, shuffle=False):
+        preds = model(xb, return_balance = False)
+        y_ = yb
+        if y_.ndim == 1 and preds.ndim == 2 and preds.shape[1] == 1:
+            y_ = yb[:, None]
+        mse = mse_loss(preds, y_)
+        rmse = mx.sqrt(mse)
+
+        total_mse += float(mse.item())
+        total_rmse += float(rmse.item())
+        n_batches += 1
+
+    n_batches = max(n_batches, 1)
+    return total_mse / n_batches, total_rmse / n_batches
+
+def evaluate_model(model, x, y, batch_size, task_type = "regression"):
+    if task_type == "regression":
+        return evaluate_regression(model,x,y,batch_size)
+    elif task_type == "classification":
+        return evaluate_classification(model, x, y, batch_size)
+    else:
+        raise ValueError("The task type is not suppored now!")
 
 
 class MoEInspector:
@@ -103,3 +129,38 @@ class MoEInspector:
             "usage_ratio": usage,      # 每个 expert 被用的比例
             "avg_prob_ratio": avg_prob # gate 概率占比
         }
+
+def flatten_params(obj):
+    """把 model.parameters() 或 grads 展平成 list[mx.array]"""
+    params = []
+    if isinstance(obj, dict):
+        for v in obj.values():
+            params.extend(flatten_params(v))
+    elif isinstance(obj, (list, tuple)):
+        for v in obj:
+            params.extend(flatten_params(v))
+    elif isinstance(obj, mx.array):
+        params.append(obj)
+    return params
+
+def params_l2_norm(model) -> float:
+    flat = flatten_params(model.parameters())
+    if not flat:
+        return 0.0
+    s = mx.array(0.0, dtype=mx.float32)
+    for p in flat:
+        p = p.astype(mx.float32)
+        s = s + mx.sum(p * p)
+    return float(mx.sqrt(s).item())
+
+def params_delta_norm(model, before) -> float:
+    after = flatten_params(model.parameters())
+    assert len(after) == len(before), (len(after), len(before))
+    s = mx.array(0.0, dtype=mx.float32)
+    for a, b in zip(after, before):
+        d = (a - b).astype(mx.float32)
+        s = s + mx.sum(d * d)
+    return float(mx.sqrt(s).item())
+
+def snapshot_params(model):
+     return [mx.array(p) for p in flatten_params(model.parameters())]
