@@ -29,12 +29,24 @@ from .gate import (
     SoftGate,
     TopKGate,
     gate_factory,
+    normalize_state_general,
+    measure_sigma_z_probs_general,
+    pauli_z,
+    normalize,
+    shape_init,
+    mps_init,
+    mpo_init,
+    get_quantum_layer,
+    evolution,
+    measurement,
+    Quantum_layer_Gate,
 )
 
 # Heads
 from .heads import (
     ClassificationHead,
     RegressionHead,
+    LinearHead,
 )
 
 # Losses & metrics
@@ -49,6 +61,7 @@ from .losses import (
 from .moes import (
     MoElayer,
     GenericMoE,
+    DenseRegressor,
 )
 
 # Utilities
@@ -57,31 +70,46 @@ from .tools import (
     set_seed,
     batch_iter,
     evaluate,
-    evaluate_moe,
+    evaluate_classification,
+    evaluate_regression,
+    evaluate_model,
     MoEInspector,
+    flatten_params,
+    params_l2_norm,
+    params_delta_norm,
+    snapshot_params
 )
 
 # Train steps
 from .trains import (
+    linear_warmup,
+    learning_schedule,
     train_step_classification,
     train_step_regression,
     Trainer
 )
+
+from .debug import setup_logger
 
 __all__ = [
     # experts
     "MLPExpert", "CNNExpert", "RNNExpert",
     # gate
     "softmax_with_temperature", "log_softmax", "topk_routing",
-    "SoftGate", "TopKGate", "gate_factory",
+    "SoftGate", "TopKGate", "gate_factory","normalize_state_general", 
+    "measure_sigma_z_probs_general", "pauli_z", "normalize", 
+    "shape_init", "mps_init", "mpo_init", "get_quantum_layer", 
+    "evolution", "measurement", "Quantum_layer_Gate",
     # heads
-    "ClassificationHead", "RegressionHead",
+    "ClassificationHead", "RegressionHead", "LinearHead",
     # losses
     "cross_entropy", "mse_loss", "balance_loss", "accuracy",
     # moes
-    "MoElayer", "GenericMoE",
+    "MoElayer", "GenericMoE", "DenseRegressor",
     # tools
-    "smooth", "set_seed", "batch_iter", "evaluate", "evaluate_moe", "MoEInspector"
+    "smooth", "set_seed", "batch_iter", "evaluate", "evaluate_classification", "evaluate_regression", "evaluate_model", "MoEInspector","flatten_params", "params_l2_norm", "params_delta_norm", "snapshot_params",
     # train steps
-    "train_step_classification", "train_step_regression", "Trainer"
+    "linear_warmup", "learning_schedule", "train_step_classification", "train_step_regression", "Trainer",
+    # debug
+    "setup_logger",
 ]
