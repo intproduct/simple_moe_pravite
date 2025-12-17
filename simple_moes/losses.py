@@ -14,8 +14,8 @@ def cross_entropy(logits: mx.array, targets: mx.array) -> mx.array:
 
 def mse_loss(pred: mx.array, target: mx.array) -> mx.array:
     pred = pred.reshape(-1)
-    target = target.astype(pred.dtype)
-    return ((pred - target)**2).mean()
+    target = target.reshape(-1).astype(pred.dtype)
+    return ((pred - target) ** 2).mean()
 
 def balance_loss(probs: mx.array, mask: Optional[mx.array], coeff: float) -> mx.array:
     probs = probs.astype(mx.float32)
