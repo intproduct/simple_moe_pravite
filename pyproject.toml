@@ -18,7 +18,7 @@ dependencies = [
   # 按你实际用到的库来填
   "numpy>=1.23",
   "mlx>=0.29.0",
-  "mlx["cuda"]",
+  "mlx['cuda']",
   # "mlx" 目前可按你环境需要写，或让用户自装
   # "torch" 如果你没有用就别写
 ]
